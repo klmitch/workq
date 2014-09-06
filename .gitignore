@@ -1,0 +1,8 @@
+/build
+/.coverage
+/cov_html
+/dist
+/workq.egg-info
+/.tox
+*.log
+*.pyc
