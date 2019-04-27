@@ -47,7 +47,7 @@ def readreq(filename):
 
 setuptools.setup(
     name='workq',
-    version='1.0.0',
+    version='1.0.1',
     author='Kevin L. Mitchell',
     author_email='klmitch@mit.edu',
     url='https://github.com/klmitch/workq',
