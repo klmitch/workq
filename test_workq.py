@@ -14,38 +14,37 @@
 #    under the License.
 
 import collections
-import unittest
 
-import mock
+import pytest
 
 import workq
 
 
-class WorkQueueTest(unittest.TestCase):
-    @mock.patch.object(workq.WorkQueue, 'extend')
-    def test_init_base(self, mock_extend):
+class TestWorkQueue(object):
+    def test_init_base(self, mocker):
+        mock_extend = mocker.patch.object(workq.WorkQueue, 'extend')
         wq = workq.WorkQueue(['a', 'b', 'c'])
 
-        self.assertEqual(wq._work, collections.deque())
-        self.assertEqual(wq._seen, set())
-        self.assertEqual(wq._count, 0)
-        self.assertEqual(wq._unique, True)
-        self.assertEqual(wq._key, None)
+        assert wq._work == collections.deque()
+        assert wq._seen == set()
+        assert wq._count == 0
+        assert wq._unique is True
+        assert wq._key is None
         mock_extend.assert_called_once_with(['a', 'b', 'c'])
 
-    @mock.patch.object(workq.WorkQueue, 'extend')
-    def test_init_alt(self, mock_extend):
+    def test_init_alt(self, mocker):
+        mock_extend = mocker.patch.object(workq.WorkQueue, 'extend')
         wq = workq.WorkQueue(['a', 'b', 'c'], False, 'key')
 
-        self.assertEqual(wq._work, collections.deque())
-        self.assertEqual(wq._seen, set())
-        self.assertEqual(wq._count, 0)
-        self.assertEqual(wq._unique, False)
-        self.assertEqual(wq._key, 'key')
+        assert wq._work == collections.deque()
+        assert wq._seen == set()
+        assert wq._count == 0
+        assert wq._unique is False
+        assert wq._key == 'key'
         mock_extend.assert_called_once_with(['a', 'b', 'c'])
 
-    def get_queue(self, items=None, seen=None, unique=True, key=None):
-        with mock.patch.object(workq.WorkQueue, 'extend'):
+    def get_queue(self, mocker, items=None, seen=None, unique=True, key=None):
+        with mocker.patch.object(workq.WorkQueue, 'extend'):
             wq = workq.WorkQueue([], unique, key)
 
         if items:
@@ -56,59 +55,60 @@ class WorkQueueTest(unittest.TestCase):
 
         return wq
 
-    def test_len_empty(self):
-        wq = self.get_queue()
+    def test_len_empty(self, mocker):
+        wq = self.get_queue(mocker)
 
-        self.assertEqual(len(wq), 0)
+        assert len(wq) == 0
 
-    def test_len_nonempty(self):
-        wq = self.get_queue(items=['a', 'b', 'c'])
+    def test_len_nonempty(self, mocker):
+        wq = self.get_queue(mocker, items=['a', 'b', 'c'])
 
-        self.assertEqual(len(wq), 3)
+        assert len(wq) == 3
 
-    def test_bool_empty(self):
-        wq = self.get_queue()
+    def test_bool_empty(self, mocker):
+        wq = self.get_queue(mocker)
 
-        self.assertFalse(wq)
+        assert not wq
 
-    def test_bool_nonempty(self):
-        wq = self.get_queue(items=['a', 'b', 'c'])
+    def test_bool_nonempty(self, mocker):
+        wq = self.get_queue(mocker, items=['a', 'b', 'c'])
 
-        self.assertTrue(wq)
+        assert wq
 
-    def test_iter(self):
-        wq = self.get_queue()
+    def test_iter(self, mocker):
+        wq = self.get_queue(mocker)
 
         result = iter(wq)
 
-        self.assertEqual(result, wq)
+        assert result == wq
 
-    def test_next(self):
-        wq = self.get_queue(items=['a', 'b'])
+    def test_next(self, mocker):
+        wq = self.get_queue(mocker, items=['a', 'b'])
 
         result1 = wq.__next__()
 
-        self.assertEqual(result1, 'a')
+        assert result1 == 'a'
 
         result2 = wq.__next__()
 
-        self.assertEqual(result2, 'b')
+        assert result2 == 'b'
 
-        self.assertRaises(StopIteration, wq.__next__)
+        with pytest.raises(StopIteration):
+            wq.__next__()
 
-    def test_add_nonunique(self):
-        wq = self.get_queue(unique=False)
+    def test_add_nonunique(self, mocker):
+        wq = self.get_queue(mocker, unique=False)
 
         wq.add('a')
         wq.add('a')
         wq.add('a')
 
-        self.assertEqual(wq._work, collections.deque(['a', 'a', 'a']))
-        self.assertEqual(wq._seen, set())
-        self.assertEqual(wq._count, 3)
+        assert wq._work == collections.deque(['a', 'a', 'a'])
+        assert wq._seen == set()
+        assert wq._count == 3
 
-    def test_add_unique_nokey(self):
-        wq = self.get_queue()
+    def test_add_unique_nokey(self, mocker):
+        wq = self.get_queue(mocker)
 
         wq.add('a')
         wq.add('b')
@@ -116,17 +116,17 @@ class WorkQueueTest(unittest.TestCase):
         wq.add('c')
         wq.add('b')
 
-        self.assertEqual(wq._work, collections.deque(['a', 'b', 'c']))
-        self.assertEqual(wq._seen, set(['a', 'b', 'c']))
-        self.assertEqual(wq._count, 3)
+        assert wq._work == collections.deque(['a', 'b', 'c'])
+        assert wq._seen == set(['a', 'b', 'c'])
+        assert wq._count == 3
 
-    def test_add_unique_withkey(self):
-        wq = self.get_queue(key=lambda x: x.key)
-        a1 = mock.Mock(key='a')
-        b1 = mock.Mock(key='b')
-        a2 = mock.Mock(key='a')
-        c1 = mock.Mock(key='c')
-        b2 = mock.Mock(key='b')
+    def test_add_unique_withkey(self, mocker):
+        wq = self.get_queue(mocker, key=lambda x: x.key)
+        a1 = mocker.Mock(key='a')
+        b1 = mocker.Mock(key='b')
+        a2 = mocker.Mock(key='a')
+        c1 = mocker.Mock(key='c')
+        b2 = mocker.Mock(key='b')
 
         wq.add(a1)
         wq.add(b1)
@@ -134,44 +134,44 @@ class WorkQueueTest(unittest.TestCase):
         wq.add(c1)
         wq.add(b2)
 
-        self.assertEqual(wq._work, collections.deque([a1, b1, c1]))
-        self.assertEqual(wq._seen, set(['a', 'b', 'c']))
-        self.assertEqual(wq._count, 3)
+        assert wq._work == collections.deque([a1, b1, c1])
+        assert wq._seen == set(['a', 'b', 'c'])
+        assert wq._count == 3
 
-    @mock.patch.object(workq.WorkQueue, 'add')
-    def test_extend(self, mock_add):
-        wq = self.get_queue()
+    def test_extend(self, mocker):
+        mock_add = mocker.patch.object(workq.WorkQueue, 'add')
+        wq = workq.WorkQueue([])
 
         wq.extend(['a', 'b', 'c', 'd'])
 
         mock_add.assert_has_calls([
-            mock.call('a'),
-            mock.call('b'),
-            mock.call('c'),
-            mock.call('d'),
+            mocker.call('a'),
+            mocker.call('b'),
+            mocker.call('c'),
+            mocker.call('d'),
         ])
 
-    def test_count(self):
-        wq = self.get_queue()
+    def test_count(self, mocker):
+        wq = self.get_queue(mocker)
         wq._count = 5
 
-        self.assertEqual(wq.count, 5)
+        assert wq.count == 5
 
-    def test_worked(self):
-        wq = self.get_queue(items=['a', 'b', 'c'])
+    def test_worked(self, mocker):
+        wq = self.get_queue(mocker, items=['a', 'b', 'c'])
         wq._count += 2
 
-        self.assertEqual(wq.worked, 2)
+        assert wq.worked == 2
 
 
-class WorkQueueFunctionTest(unittest.TestCase):
-    def test_basic(self):
+class TestWorkQueueFunction(object):
+    def test_basic(self, mocker):
         files = {
-            'f1': mock.Mock(includes=['f1', 'f2', 'f3']),
-            'f2': mock.Mock(includes=['f1', 'f3', 'f4']),
-            'f3': mock.Mock(includes=[]),
-            'f4': mock.Mock(includes=['f5']),
-            'f5': mock.Mock(includes=[]),
+            'f1': mocker.Mock(includes=['f1', 'f2', 'f3']),
+            'f2': mocker.Mock(includes=['f1', 'f3', 'f4']),
+            'f3': mocker.Mock(includes=[]),
+            'f4': mocker.Mock(includes=['f5']),
+            'f5': mocker.Mock(includes=[]),
         }
 
         wq = workq.WorkQueue(['f1'])
@@ -184,4 +184,4 @@ class WorkQueueFunctionTest(unittest.TestCase):
 
             wq.extend(fobj.includes)
 
-        self.assertEqual(worked, ['f1', 'f2', 'f3', 'f4', 'f5'])
+        assert worked == ['f1', 'f2', 'f3', 'f4', 'f5']

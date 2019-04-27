@@ -1,1 +1,5 @@
-mock>=1.0
+coverage
+pytest
+pytest-cov
+pytest-mock
+tox

@@ -1,35 +1,51 @@
 #!/usr/bin/env python
 
 import os
+import sys
 
-from setuptools import setup
-
-
-def readreq(filename):
-    result = []
-    with open(filename) as f:
-        for req in f:
-            req = req.lstrip()
-            if req.startswith('-e ') or req.startswith('http:'):
-                idx = req.find('#egg=')
-                if idx >= 0:
-                    req = req[idx + 5:].partition('#')[0].strip()
-                else:
-                    pass
-            else:
-                req = req.partition('#')[0].strip()
-            if not req:
-                continue
-            result.append(req)
-    return result
+import setuptools
 
 
+# Utility function to read the README file
 def readfile(filename):
     with open(filename) as f:
         return f.read()
 
 
-setup(
+# Utility function to read requirements.txt files
+def readreq(filename):
+    result = []
+    with open(filename) as f:
+        for line in f:
+            line = line.strip()
+
+            # Process requirement file references
+            if line.startswith('-r '):
+                subfilename = line.split(None, 1)[-1].split('#', 1)[0].strip()
+                if subfilename:
+                    result += readreq(subfilename)
+                continue
+
+            # Strip out "-e" prefixes
+            if line.startswith('-e '):
+                line = line.split(None, 1)[-1]
+
+            # Detect URLs in the line
+            idx = line.find('#egg=')
+            if idx >= 0:
+                line = line[idx + 5:]
+
+            # Strip off any comments
+            line = line.split('#', 1)[0].strip()
+
+            # Save the requirement
+            if line:
+                result.append(line.split('#', 1)[0].strip())
+
+    return result
+
+
+setuptools.setup(
     name='workq',
     version='1.0.0',
     author='Kevin L. Mitchell',
@@ -37,17 +53,16 @@ setup(
     url='https://github.com/klmitch/workq',
     description="Iterative Work Queue",
     long_description=readfile('README.rst'),
-    license='Apache License (2.0)',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Utilities',
     ],
     py_modules=['workq'],
