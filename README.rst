@@ -2,6 +2,9 @@
 Iterative Work Queue
 ====================
 
+.. image:: https://travis-ci.org/klmitch/workq.svg?branch=master
+    :target: https://travis-ci.org/klmitch/workq
+
 In programming, there are some problems with recursive algorithms.
 One of them is the stack: each recursion adds a new frame to the
 stack.  This can be mitigated using tail recursion, but tail recursion
